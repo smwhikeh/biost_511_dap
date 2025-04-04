@@ -1,0 +1,340 @@
+---
+title: "DAP_figures"
+author: "sophie whikehart"
+date: "2023-12-04"
+output: 
+  word_document:
+    keep_md: yes
+    toc: TRUE
+    toc_depth: 4
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      comment = "")
+
+# load libraries
+
+library(e1071) # skewness()
+
+library(tidyverse) # summarize data and for %>% function
+
+library(ggplot2) # create graphs using the ggplot2 package
+
+library(flextable) # create a nice summary table in Word
+
+library(gtsummary) # summary table in word 
+
+# import data 
+chdclass <- read.csv(file = "data/chd3200 (1).csv")
+
+#create factor variables 
+
+# MI family history
+chdclass$fhha.f <- factor(chdclass$fhha, levels = c(0,1), 
+                        labels = c("No", "Yes"))
+
+# coronary heart disease (CHD)
+chdclass$incchd.f <- factor(chdclass$incchd, levels = c(0,1), 
+                          labels = c("No", "Yes"))
+# smoking status
+chdclass$smoke.f <- factor(chdclass$smoke, levels = c(1,2,3), 
+                            labels = c("Never", "Former", "Current"))
+```
+
+# Figure 1
+
+## Conduct descriptive analysis for the quantitative variables by creating a summary table for the quantitative variables [age, alcoh, hdl, insulin]
+
+```{r, message=FALSE}
+chdclass %>% select(age, alcoh, hdl, insulin) %>%
+  tbl_summary(missing = "ifany",
+              type = all_continuous() ~ "continuous2",
+              statistic = all_continuous() ~ c("{mean} ({sd})",
+                                                "{median} ({p25}, {p75})", 
+                                                "{min}, {max}",
+                                                "{skewness}"),
+              digits = list(all_continuous() ~ 1),  
+              label = list(age ~ "Age (y)",
+                           alcoh  ~ "Alcohol consumption (drinks/wk)",
+                           hdl ~ "HDL cholesterol (mg/dL)",
+                           insulin ~ "Serum insulin (IU/ml)")
+              ) %>%
+  modify_header(label = "**Variable**") %>% 
+  add_stat_label(label = all_continuous() ~ c("Mean (SD)", 
+                                              "Median (IQR)",
+                                              "Min to Max", "Skewness"))
+```
+
+# Figure 2 
+# Histogram to show distribution of alcohol
+
+```{r Alcohol histogram, message=FALSE}
+ggplot(data=chdclass, aes(x=alcoh)) +
+geom_histogram(color="black", fill="blue4", binwidth=10, position="identity", alpha=0.7) +
+labs(x="Alcohol drinks",
+y="No. of subjects",
+title="Histogram of Alcohol Consumption (drinks/wk)") 
+``` 
+
+# Figure 3 
+# Histogram to show distribution of hdl 
+
+```{r hdl histogram, message=FALSE}
+ggplot(data=chdclass, aes(x=hdl)) +
+geom_histogram(color="black", fill="lightblue", binwidth=10, position="identity", alpha=0.7) +
+labs(x="HDL",
+y="No. of subjects",
+title="HDL Cholesterol (mg/dL)") 
+``` 
+
+```{r, include= TRUE}
+#create categories
+chdclass$alcoh <- cut(chdclass$alcoh, breaks = c(-Inf,0,7.000,Inf))
+
+#check categories
+table(chdclass$alcoh, exclude=FALSE)
+
+#create a factor variable 
+chdclass$alcoh.f <- factor(chdclass$alcoh,
+                           levels = c("(-Inf,0]", "(0,7]",
+                           "(7, Inf]"),
+                           labels = c("0", ">0 to 7", ">7"))
+#check factor variable
+table(chdclass$alcoh.f)
+```
+
+# Figure 4
+## Histogram to show distribution of serum insulin levels
+
+```{r HDL inaulin, message=FALSE}
+ggplot(data=chdclass, aes(x=hdl)) +
+geom_histogram(color="black", fill="purple4", binwidth=10, position="identity", alpha=0.7) +
+labs(x="Insulin (Serum insulin level (IU/ml))",
+y="No. of subjects",
+title="Histogram of Insulin") 
+```
+
+# Figure 5
+## Frequency distribution of categorical variables 
+
+```{r, message=FALSE}
+theme_gtsummary_journal(journal = "jama") # Use the JAMA theme
+
+chdclass %>% select(fhha.f, incchd.f, smoke.f, alcoh.f) %>%
+  tbl_summary(missing = "ifany",
+              type = list(fhha.f ~ "categorical",
+                          incchd.f ~ "categorical"),
+              digits = list(all_categorical() ~ c(0,1)),  
+              label = list(fhha.f ~ "Family history MI",
+                           incchd.f ~ "Coronary heart disease",
+                           smoke.f ~ "Smoking status",
+                           alcoh.f ~ "Average consumption of alcohol per week")
+              ) %>%
+  modify_header(label = "**Variable**")
+```
+
+# Figure 6
+## Bar chart of Family History of Heart Attack
+
+```{r FFHA barchart, message=FALSE}
+ggplot(data=chdclass, aes(x=fhha.f)) +
+geom_bar(color="black", fill="red4", binwidth=10, position="identity", alpha=0.7) +
+labs(x="Family History of Heart Attack",
+y="No. of subjects",
+title="Bar chart on Family History of Heart Attack") 
+```
+
+# Figure 7
+## Bar chart on smoking status
+
+```{r Smoke barchart, message=FALSE}
+ggplot(data=chdclass, aes(x=smoke.f)) +
+geom_bar(color="black", fill="black", binwidth=10, position="identity", alpha=0.7) +
+labs(x="Smoking Status",
+y="No. of subjects",
+title="Bar chart on Smoking Status") 
+```
+
+# Figure 8
+## Bar chart to show alcohol consumption 
+
+```{r alcohol barchart, message=FALSE}
+ggplot(data=chdclass, aes(x=alcoh.f)) +
+geom_bar(color="black", fill="lightblue4", binwidth=10, position="identity", alpha=0.7) +
+labs(x="Alcohol drinks",
+y="No. of subjects",
+title="Bar chart on Alcohol Consumption by 0 drinks, >0 to 7 and >7 drinks per week") 
+```
+
+# Figure 9
+## Box plot of CHD and HDL Cholestrol 
+
+```{r, fig.width=3, fig.height=3}
+ggplot(data=chdclass, aes(x=incchd.f, y=hdl, fill=incchd.f)) +
+  geom_boxplot() +
+  labs(x="CHD",
+       y="HDL cholesterol (mg/dL)",
+       title="HDL cholesterol by CHD") + 
+  scale_y_continuous(limits=c(0, 140), breaks=seq(0,150,20)) + 
+  theme_classic() +
+  theme(legend.position="none") +
+   theme(
+    legend.position = "none",
+    legend.title = element_text(colour="black", size=10, 
+                                      face="bold"),
+    legend.text = element_text(colour="black", size=10, 
+                                     face="bold"),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.text.x = element_text(face="bold", size=11),
+    axis.title.y = element_text(face="bold", size=12),
+    axis.text.y = element_text(face="bold", size=11)) +
+  scale_fill_manual(values=c("orange","lightblue"))
+```
+
+# Figure 10
+## Two sample t-test to determine if HDL cholesterol levels are associated with CHD 
+
+```{r }
+# t.test 
+t.test(hdl ~ incchd.f, conf.level=0.95, var.equal = FALSE, data=chdclass, alternative= "two.sided")
+```
+
+# Figure 11
+## Final summary table reporting HDl cholesterol, alcohol, serum insulin, smoking status and family history of heart attack by CHD 
+
+```{r, message=FALSE}
+theme_gtsummary_journal(journal = "jama") # Use the JAMA theme
+
+chdclass %>% select(incchd.f, age, alcoh.f, hdl, insulin, smoke.f, fhha.f) %>%
+  tbl_summary(by = incchd.f,
+              missing = "ifany",
+              statistic = list(age ~ c("{median} ({p25}, {p75})"),
+                               hdl ~ c("{mean} ({sd})"),
+                               insulin ~ c("{median} ({p25}, {p75})")
+                               ),
+              percent = "row",
+              type = list(fhha.f ~ "categorical",
+                          alcoh.f ~ "categorical"),
+              digits = list(all_categorical() ~ c(0,1)),  
+              label = list(hdl ~ "HDL cholesterol (mg/dL)",
+                           insulin ~ "Serum insulin (IU/ml)",
+                           smoke.f ~ "Smoking status",
+                           age ~ "Age (years)",
+                           alcoh.f ~ "Average number of alcoholic drinks per week",
+                           fhha.f ~ "Family history of heart attack")
+              ) %>%
+  add_overall() %>%
+  modify_header(label = "**Variable**") %>%
+  modify_spanning_header(stat_1 ~ "Coronary Heart Disease",
+                         stat_2 ~ "Coronary Heart Disease") %>% 
+  add_p()
+```
+
+# Figure 12
+## Overall HDL cholesterol by CHD 
+
+```{r}
+#categorizing HDL cholesterol
+chdclass$hdlcat <- cut(chdclass$hdl, breaks = c(-Inf,40,Inf))
+
+table(chdclass$hdlcat, exclude = FALSE)
+
+# create a factor variable
+chdclass$hdlcat.f <- factor(chdclass$hdlcat, 
+                            levels = c("(-Inf,40]", "(40, Inf]"), 
+                            labels = c("<40", ">=40"))
+
+# check factor variable
+table(chdclass$hdlcat.f)
+
+#create cross-tab for overall HDL cholesterol and CHD incidence
+chdclass |> 
+  select(incchd.f, hdlcat.f) |>
+  tbl_summary(by = incchd.f,
+              missing = "no",
+              percent = "row",
+              statistic = all_categorical() ~ "{n} ({p}%)",
+              label = list(incchd.f ~ "Incidence of CHD",
+                           hdlcat.f ~ "HDL cholesterol")) %>%
+  modify_spanning_header(stat_1 ~ "Overall HDL and CHD")
+
+```
+
+# Figure 13
+## Bar chart on categorized HDL 
+
+```{r hdl barchart, message=FALSE}
+ggplot(data=chdclass, aes(x=hdlcat.f)) +
+geom_bar(color="black", fill="pink4", binwidth=10, position="identity", alpha=0.7) +
+labs(x="HDL",
+y="No. of subjects",
+title="Bar chart on HDL <40 and >=40") 
+```
+
+# Figure 14
+## HDL cholesterol by CHD - Family History of Heart Attack = Yes
+
+```{r}
+#categorizing HDL cholesterol
+chdclass$hdlcat <- cut(chdclass$hdl, breaks = c(-Inf,40,Inf))
+
+table(chdclass$hdlcat, exclude = FALSE)
+
+#create a factor variable
+chdclass$hdlcat.f <- factor(chdclass$hdlcat, 
+                            levels = c("(-Inf,40]", "(40, Inf]"), 
+                            labels = c("<40", ">=40"))
+
+#check factor variable
+table(chdclass$hdlcat.f)
+
+#create cross-tab for FFHA = YES by HDL cholesterol and CHD incidence
+chdclass %>% 
+  filter(fhha.f == "Yes") %>%
+  select(incchd.f, hdlcat.f) %>%
+  tbl_summary(by = incchd.f,
+              missing = "no",
+              percent = "row",
+              statistic = all_categorical() ~ "{n} ({p}%)",
+              label = list(incchd.f ~ "Incidence of CHD",
+                           hdlcat.f ~ "HDL cholesterol (mg/dL)")) %>%
+modify_header(label = "**Variable**") %>%
+  modify_spanning_header(stat_1 ~ "Family History of Heart Attack = Yes to CHD")
+```
+
+
+
+# Figure 15
+## HDL cholesterol by CHD - Family History of Heart Attack = No
+
+```{r}
+#categorizing HDL cholesterol
+chdclass$hdlcat <- cut(chdclass$hdl, breaks = c(-Inf,40,Inf))
+
+table(chdclass$hdlcat, exclude = FALSE)
+
+#create a factor variable
+chdclass$hdlcat.f <- factor(chdclass$hdlcat, 
+                            levels = c("(-Inf,40]", "(40, Inf]"), 
+                            labels = c("<40", ">=40"))
+
+#check factor variable
+table(chdclass$hdlcat.f)
+
+#create cross-tab for FFHA = NO by HDL cholesterol and CHD incidence
+chdclass %>% 
+  filter(fhha.f == "No") %>%
+  select(incchd.f, hdlcat.f) %>%
+  tbl_summary(by = incchd.f,
+              missing = "no",
+              percent = "row",
+              statistic = all_categorical() ~ "{n} ({p}%)",
+              label = list(incchd.f ~ "Incidence of CHD",
+                           hdlcat.f ~ "HDL cholesterol (mg/dL)")) %>%
+modify_header(label = "**Variable**") %>%
+  modify_spanning_header(stat_1 ~ "Family History of Heart Attack = No to CHD") 
+```
+
