@@ -1,10 +1,6 @@
 # BIOST 511 Final Group Project - Data Analysis Plan Code
 
-This contains the code from BIOST 511 Part 1 and Part 2 Final Project
-
-# Part 1 
-
-Creation of a statistical analysis plan. Wrote a statistical hypothesis and proposed analysis that included descriptive analysis comprising of basic data description, evaluation/comparison of subgroups, identification of outliers and patterns, and checked assumptions of normality for inferential analysis [ex - normality, linearity, mean/variance relationships].
+This contains the code from BIOST 511 Part 2 Final Project
 
 # Part 2
 
