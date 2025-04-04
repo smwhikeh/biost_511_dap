@@ -1,6 +1,6 @@
 # BIOST 511 Final Group Project - Data Analysis Plan
 
-Co-authored with Tessa Fujisaki MPHc, Thania Solar M.D., MPHc, and Sian Siam MPHc.
+Co-authored with Tessa Fujisaki MPH, Thania Solar M.D, MPH, and Sian Siam MPH.
 
 # Part 1 
 
