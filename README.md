@@ -1,8 +1,8 @@
 # BIOST 511 Final Group Project - Data Analysis Plan Code
 
-Code: Sophie Whikehart 
-
 Report: Co-authored with Tessa Fujisaki MPH, Thania Solar M.D, MPH, and Sian Siam MPH.
+
+R script: Sophie Whikehart MPH 
 
 # Part 1 
 
